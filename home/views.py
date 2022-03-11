@@ -5,6 +5,7 @@ from home.models import Contact
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from blog.models import Post
 
 # Create your views here.
 def index(request):
@@ -12,14 +13,14 @@ def index(request):
         "variable1":"Hey Ayan",
         "variable2":"Hey Krishna"
     }
-    return render(request, "index.html", context)
+    return render(request, "home/index.html", context)
     #return HttpResponse("this is homepage")
 
 def about(request):
-    return render(request, "about.html")
+    return render(request, "home/about.html")
 
-def services(request):
-    return render(request, "services.html")
+#def services(request):
+ #   return render(request, "home/services/.html")
 
 def contact(request):
     if request.method == 'POST':
@@ -30,7 +31,7 @@ def contact(request):
         contact = Contact(name= name, email=email, phone=phone, desc=desc, date=datetime.today())
         contact.save()
         messages.success(request, 'Your massage has been sent!')
-    return render(request, "contact.html")
+    return render(request, "home/contact.html")
 
 
 def handleSignup(request):
@@ -82,4 +83,18 @@ def handleLogout(request):
     messages.success(request, "Successfully Logged out")
     return redirect('home')
 
+
+def search(request):
+    query = request.GET['query']
+    if len(query)>78:
+        allPosts = Post.objects.none()
+    else:
+        allPostsTitle = Post.objects.filter(title__icontains=query)
+        allPostsContent = Post.objects.filter(content__icontains=query)
+        allPosts = allPostsTitle.union(allPostsContent)
+
+    if allPosts.count() == 0:
+        messages.warning(request, "No search results found. Please refine your query")
+    params = {'allPosts': allPosts, 'query':query}
+    return render(request, 'home/search.html',params)
         
